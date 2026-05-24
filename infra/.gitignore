@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# CDK output
+cdk.out/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# CDK context (generated, contains account/region specifics)
+cdk.context.json
