@@ -19,6 +19,8 @@ class LoadBalancerConstruct extends Construct {
       port: 3000,
       protocol: elbv2.ApplicationProtocol.HTTP,
       targetType: elbv2.TargetType.INSTANCE,
+      // Shortened from the 300s AWS default to match the simulator's drain feel.
+      deregistrationDelay: cdk.Duration.seconds(30),
       healthCheck: {
         path: '/',
         interval: cdk.Duration.seconds(30),
@@ -31,6 +33,7 @@ class LoadBalancerConstruct extends Construct {
       port: 4000,
       protocol: elbv2.ApplicationProtocol.HTTP,
       targetType: elbv2.TargetType.INSTANCE,
+      deregistrationDelay: cdk.Duration.seconds(30),
       healthCheck: {
         path: '/api/health',
         interval: cdk.Duration.seconds(30),

@@ -39,8 +39,6 @@ class NetworkingConstruct extends Construct {
       ec2.Port.tcp(3000),
       'From ALB to Nginx',
     );
-    // Allow SSH for debugging (restrict to your IP in production)
-    this.frontendSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'SSH');
 
     this.backendSg = new ec2.SecurityGroup(this, 'BackendSg', {
       vpc: this.vpc,
@@ -52,7 +50,6 @@ class NetworkingConstruct extends Construct {
       ec2.Port.tcp(4000),
       'From ALB to Express',
     );
-    this.backendSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'SSH');
   }
 }
 

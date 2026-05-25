@@ -11,7 +11,8 @@ class ComputeConstruct extends Construct {
       vpc,
       frontendSg,
       backendSg,
-      instanceRole,
+      frontendInstanceRole,
+      backendInstanceRole,
       frontendBucket,
       backendBucket,
       frontendTg,
@@ -20,6 +21,11 @@ class ComputeConstruct extends Construct {
       frontendDeployment,
       backendDeployment,
     } = props;
+
+    // Lazy tokens so the ASG names can be embedded in userdata before the
+    // ASG resources are constructed — CDK resolves them at synthesis time.
+    const frontendAsgName = cdk.Lazy.string({ produce: () => this.frontendAsg.autoScalingGroupName });
+    const backendAsgName = cdk.Lazy.string({ produce: () => this.backendAsg.autoScalingGroupName });
 
     const region = cdk.Stack.of(this).region;
     const ami = ec2.MachineImage.latestAmazonLinux2023();
@@ -133,6 +139,8 @@ Environment=AWS_DEFAULT_REGION=${region}
 Environment=ALB_FULL_NAME=${alb.loadBalancerFullName}
 Environment=FRONTEND_TG_FULL_NAME=${frontendTg.targetGroupFullName}
 Environment=BACKEND_TG_FULL_NAME=${backendTg.targetGroupFullName}
+Environment=FRONTEND_ASG_NAME=${frontendAsgName}
+Environment=BACKEND_ASG_NAME=${backendAsgName}
 ExecStart=/usr/bin/node /app/server.js
 Restart=always
 RestartSec=3
@@ -174,7 +182,7 @@ EOF`,
       ),
       machineImage: ami,
       securityGroup: frontendSg,
-      role: instanceRole,
+      role: frontendInstanceRole,
       userData: frontendUserData,
       associatePublicIpAddress: true,
       // 1-min CPU metrics so the demo reacts in ~1 min instead of ~5
@@ -188,7 +196,7 @@ EOF`,
       ),
       machineImage: ami,
       securityGroup: backendSg,
-      role: instanceRole,
+      role: backendInstanceRole,
       userData: backendUserData,
       associatePublicIpAddress: true,
       detailedMonitoring: true,

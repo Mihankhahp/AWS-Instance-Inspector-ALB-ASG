@@ -6,17 +6,24 @@ class IamConstruct extends Construct {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    this.instanceRole = new iam.Role(this, 'InstanceRole', {
+    const sharedPolicies = [
+      iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
+      iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy'),
+    ];
+
+    // Frontend instances only need SSM access and the CW agent for log shipping.
+    this.frontendInstanceRole = new iam.Role(this, 'FrontendInstanceRole', {
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          'AmazonSSMManagedInstanceCore',
-        ),
-      ],
+      managedPolicies: sharedPolicies,
     });
 
-    // Read-only access for /api/cluster + write access for CW agent (logs + metrics).
-    this.instanceRole.addToPolicy(
+    // Backend instances additionally call ASG/CloudWatch APIs for /api/cluster.
+    this.backendInstanceRole = new iam.Role(this, 'BackendInstanceRole', {
+      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+      managedPolicies: sharedPolicies,
+    });
+
+    this.backendInstanceRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
           'autoscaling:DescribeAutoScalingGroups',
@@ -27,10 +34,6 @@ class IamConstruct extends Construct {
         ],
         resources: ['*'],
       }),
-    );
-
-    this.instanceRole.addManagedPolicy(
-      iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy'),
     );
   }
 }

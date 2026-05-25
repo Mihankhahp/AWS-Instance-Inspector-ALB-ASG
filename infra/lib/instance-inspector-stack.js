@@ -24,7 +24,8 @@ class InstanceInspectorStack extends cdk.Stack {
     const iam = new IamConstruct(this, 'Iam');
 
     const storage = new StorageConstruct(this, 'Storage', {
-      instanceRole: iam.instanceRole,
+      frontendInstanceRole: iam.frontendInstanceRole,
+      backendInstanceRole: iam.backendInstanceRole,
     });
 
     const loadBalancer = new LoadBalancerConstruct(this, 'LoadBalancer', {
@@ -36,7 +37,8 @@ class InstanceInspectorStack extends cdk.Stack {
       vpc: networking.vpc,
       frontendSg: networking.frontendSg,
       backendSg: networking.backendSg,
-      instanceRole: iam.instanceRole,
+      frontendInstanceRole: iam.frontendInstanceRole,
+      backendInstanceRole: iam.backendInstanceRole,
       frontendBucket: storage.frontendBucket,
       backendBucket: storage.backendBucket,
       frontendTg: loadBalancer.frontendTg,

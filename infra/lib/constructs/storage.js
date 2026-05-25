@@ -7,7 +7,7 @@ class StorageConstruct extends Construct {
   constructor(scope, id, props) {
     super(scope, id, props);
 
-    const { instanceRole } = props;
+    const { frontendInstanceRole, backendInstanceRole } = props;
 
     // Holds the Vite production build; EC2s pull from here on boot.
     // Run `npm run build` in frontend/ before each `cdk deploy`.
@@ -25,7 +25,7 @@ class StorageConstruct extends Construct {
       },
     );
 
-    this.frontendBucket.grantRead(instanceRole);
+    this.frontendBucket.grantRead(frontendInstanceRole);
 
     this.backendBucket = new s3.Bucket(this, 'BackendBucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -43,7 +43,7 @@ class StorageConstruct extends Construct {
       },
     );
 
-    this.backendBucket.grantRead(instanceRole);
+    this.backendBucket.grantRead(backendInstanceRole);
   }
 }
 

@@ -285,17 +285,18 @@ async function getLiveCluster() {
   const asClient = new AutoScalingClient({ region });
   const cwClient = new CloudWatchClient({ region });
 
-  // 1. Find our two ASGs by the inspector:tier tag
-  const groups = [];
-  let token;
-  do {
-    const page = await asClient.send(new DescribeAutoScalingGroupsCommand({ NextToken: token }));
-    groups.push(...(page.AutoScalingGroups || []));
-    token = page.NextToken;
-  } while (token);
+  // 1. Fetch our two ASGs by name (injected at deploy time via systemd env vars).
+  const asgNames = [
+    process.env.FRONTEND_ASG_NAME,
+    process.env.BACKEND_ASG_NAME,
+  ].filter(Boolean);
+
+  const result = await asClient.send(
+    new DescribeAutoScalingGroupsCommand({ AutoScalingGroupNames: asgNames }),
+  );
+  const ours = result.AutoScalingGroups || [];
 
   const tierOf = (g) => (g.Tags || []).find((t) => t.Key === 'inspector:tier')?.Value;
-  const ours = groups.filter((g) => ['frontend', 'backend'].includes(tierOf(g)));
 
   // 2. Gather every instance id so we can pull CPU in one CloudWatch call
   const allInstanceIds = ours.flatMap((g) => (g.Instances || []).map((i) => i.InstanceId));
